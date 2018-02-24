@@ -1,0 +1,5 @@
+*__pycache__*
+*test*
+*p[0-9].py
+*.txt
+Net

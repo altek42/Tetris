@@ -52,7 +52,9 @@ class Genetic:
 		newPopulation = []
 		for p in range(populationSize):
 			champion = self.__getChampion(oldPopulation,3)
-			newPopulation.append(copy.deepcopy(champion))
+			newUnit = copy.deepcopy(champion)
+			newUnit.fit = 0
+			newPopulation.append(newUnit)
 		return newPopulation
 
 	def __getChampion(self,population,k):

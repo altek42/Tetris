@@ -1,6 +1,7 @@
 from Display import *
 from Tetris.Tetris import *
 from Network.NeuronNetwork import *
+from Network.Genetic import *
 import pprint
 import queue
 import threading
@@ -14,6 +15,7 @@ POPULATION_DIR = '.\\POPULATION'
 class Program:
 	def __init__(self):
 		self.display = Display()
+		self.genetic = Genetic()
 		self.tetrisList = []
 		self.population = []
 		self.generation = 0
@@ -35,18 +37,22 @@ class Program:
 		self.display.RunList(self.tetrisList)
 
 	def __netLoop(self):
-		th = []
-		for i in range(len(self.population)):
-			t = threading.Thread(target=self.__worker,args=(i,))
-			t.daemon = True
-			t.start()
-			th.append(t)
+		for i in range(5000):
+			print(self.generation)
+			th = []
+			for i in range(len(self.population)):
+				t = threading.Thread(target=self.__worker,args=(i,))
+				t.daemon = True
+				t.start()
+				th.append(t)
 
-		for item in th:
-			item.join()
+			for item in th:
+				item.join()
 
-		self.__savePopulation(POPULATION_DIR)
-		# self.generation+=1
+			self.__savePopulation(POPULATION_DIR)
+			self.__createNextPopulation()
+			for item in self.tetrisList:
+				item.Restart()
 
 	def __worker(self,index):
 		net = self.population[index]
@@ -101,6 +107,15 @@ class Program:
 		for i in range(size):
 			self.__createNewUnit()
 
+	def __createNextPopulation(self):
+		self.population = self.genetic.SelectNewPopulation(self.population)
+		populationSize = len(self.population)
+		for i in range(0,populationSize,2):
+			self.genetic.CrossNetworks(self.population[i],self.population[i+1])
+		for i in range(0,populationSize):
+			self.genetic.MutateNetwork(self.population[i])
+		self.generation+=1
+
 	def __savePopulation(self,directory):
 		directory+="\\{}".format(self.generation)
 		for i in range(len(self.population)):
@@ -127,7 +142,7 @@ class Program:
 def Main():
 	p = Program()
 	# p.StartNew(20)
-	p.StartLoad(0)
+	p.StartLoad(499)
 
 	# t = Tetris()
 	# # ll = []

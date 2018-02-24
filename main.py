@@ -14,7 +14,7 @@ POPULATION_DIR = '.\\POPULATION'
 
 class Program:
 	def __init__(self):
-		self.display = Display()
+		# self.display = Display()
 		self.genetic = Genetic()
 		self.tetrisList = []
 		self.population = []
@@ -34,11 +34,11 @@ class Program:
 		t = threading.Thread(target=self.__netLoop)
 		t.daemon = True
 		t.start()
-		self.display.RunList(self.tetrisList)
+		t.join()
+		# self.display.RunList(self.tetrisList)
 
 	def __netLoop(self):
 		for i in range(5000):
-			print(self.generation)
 			th = []
 			for i in range(len(self.population)):
 				t = threading.Thread(target=self.__worker,args=(i,))
@@ -49,10 +49,18 @@ class Program:
 			for item in th:
 				item.join()
 
+			self.__showFit()
 			self.__savePopulation(POPULATION_DIR)
 			self.__createNextPopulation()
 			for item in self.tetrisList:
 				item.Restart()
+
+	def __showFit(self):
+		fits = []
+		for item in self.population:
+			fits.append(item.fit)
+		print(self.generation,fits)
+
 
 	def __worker(self,index):
 		net = self.population[index]
@@ -135,14 +143,14 @@ class Program:
 	def __createNewUnit(self):
 		self.tetrisList.append(Tetris())
 		net = NeuronNetwork()
-		net.New(17,12,14)
+		net.New(17,30,14)
 		net.Init()
 		self.population.append(net)
 
 def Main():
 	p = Program()
-	# p.StartNew(20)
-	p.StartLoad(499)
+	# p.StartNew(30)
+	p.StartLoad(98)
 
 	# t = Tetris()
 	# # ll = []

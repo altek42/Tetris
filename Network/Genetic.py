@@ -34,7 +34,7 @@ class Genetic:
 		for x in range(row):
 			for y in range(column):
 				r = np.random.rand()
-				if r > 0.2:
+				if r > 0.1:
 					continue
 				arr[x][y] = self.__mutateValue(arr[x][y])
 
@@ -42,7 +42,7 @@ class Genetic:
 		et = np.random.rand() - 0.5
 		et = et * 2
 		et = value * et
-		return value+et
+		return -(value+et)
 
 	def SelectNewPopulation(self,oldPopulation):
 		return self.__tournamentSelection(oldPopulation)

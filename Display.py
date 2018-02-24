@@ -2,7 +2,7 @@ import pygame
 import pprint
 
 class Display:
-	FPS = 30
+	FPS = 5
 
 	def __init__(self):
 		pygame.init()

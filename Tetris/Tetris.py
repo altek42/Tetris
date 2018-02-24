@@ -12,11 +12,14 @@ class Tetris:
 
 	def __init__(self):
 		self.Restart()
+		self.isGameOver = False
+		self.onGameOver = None
 
 	def Restart(self):
 		self.brick = {}
 		self.__initBoard()
 		self.score = 0
+		self.isGameOver = False
 
 	def __initBoard(self):
 		self.board = [[0 for x in range(self.BOARD_WIDTH)] for y in range(self.BOARD_HEIGHT)]
@@ -84,6 +87,9 @@ class Tetris:
 
 	def GetScore(self):
 		return self.score
+
+	def GetBrickPosition(self):
+		return (self.brick['x'],self.brick['y'])
 
 	def RotateBrickRight(self):
 		(l,x,y) = np.shape(self.brick['shape'])
@@ -182,7 +188,7 @@ class Tetris:
 		return True
 
 	def __getNextBrick(self):
-		self.brick['x'] = 5
+		self.brick['x'] = 4
 		self.brick['y'] = 0
 		brickNum = random.randint(0, len(BRICKS) - 1)
 		self.brick['shape'] = BRICKS[brickNum]
@@ -190,5 +196,6 @@ class Tetris:
 		self.brick['rot'] = 0
 
 	def __gameOver(self):
-		self.onGameOver(self)
-		self.Restart()
+		self.isGameOver=True
+		if self.onGameOver != None:
+			self.onGameOver(self)

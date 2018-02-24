@@ -2,19 +2,104 @@ from Display import *
 from Tetris.Tetris import *
 from Network.NeuronNetwork import *
 import pprint
+import queue
+import threading
+import time
 
 import os
 os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (10,80)
 
+POPULATION_DIR = '.\\POPULATION'
+
 class Program:
-	def __init__(self,size):
+	def __init__(self):
 		self.display = Display()
 		self.tetrisList = []
 		self.population = []
 		self.generation = 0
 
-	def Start(self):
-		pass
+
+	def StartNew(self,size):
+		self.__createNewPopulation(size)
+		self.__start()
+
+	def StartLoad(self,generation):
+		self.generation = generation
+		self.__loadPopulation(POPULATION_DIR)
+		self.__start()
+
+	def __start(self):
+		t = threading.Thread(target=self.__netLoop)
+		t.daemon = True
+		t.start()
+		self.display.RunList(self.tetrisList)
+
+	def __netLoop(self):
+		th = []
+		for i in range(len(self.population)):
+			t = threading.Thread(target=self.__worker,args=(i,))
+			t.daemon = True
+			t.start()
+			th.append(t)
+
+		for item in th:
+			item.join()
+
+		self.__savePopulation(POPULATION_DIR)
+		# self.generation+=1
+
+	def __worker(self,index):
+		net = self.population[index]
+		tetris = self.tetrisList[index]
+		while not tetris.isGameOver:
+			tetrisStatus = tetris.GetTetrisForNetwork()
+			netAnswer = net.Sim(tetrisStatus)
+			netAnswer = self.__filterNetAnswer(netAnswer)
+			(pos,rot) = self.__parseNetAnswer(netAnswer)
+			for i in range(rot):
+				tetris.RotateBrickRight()
+			(brickX,brickY) = tetris.GetBrickPosition()
+			pos-=brickX
+			if pos > 0:
+				for i in range(pos):
+					tetris.MoveBrickRight()
+			elif pos < 0:
+				for i in range(-pos):
+					tetris.MoveBrickLeft()
+			tetris.ConfirmMove()
+			# time.sleep(0.1)
+		net.fit = tetris.GetScore()
+
+
+	def __parseNetAnswer(self,netAnswer):
+		position = netAnswer[:10]
+		rotation = netAnswer[10:]
+		position = [index for index, value in enumerate(position) if value == 1]
+		rotation = [index for index, value in enumerate(rotation) if value == 1]
+		if len(position) == 0:
+			rPos = int(np.random.rand() * 10)
+		else:
+			rPos = int(np.random.rand() * len(position))
+			rPos = position[rPos]
+		if len(rotation) == 0:
+			rRot = int(np.random.rand() * 4)
+		else:
+			rRot = int(np.random.rand() * len(rotation))
+			rRot = rotation[rRot]
+		return(rPos,rRot)
+
+	def __filterNetAnswer(self,netAnswer):
+		answer = []
+		for item in netAnswer:
+			if item > 0:
+				answer.append(1)
+			else:
+				answer.append(0)
+		return answer
+
+	def __createNewPopulation(self,size):
+		for i in range(size):
+			self.__createNewUnit()
 
 	def __savePopulation(self,directory):
 		directory+="\\{}".format(self.generation)
@@ -30,6 +115,7 @@ class Program:
 			net = NeuronNetwork()
 			net.Load(directory,i)
 			self.population.append(net)
+			self.tetrisList.append(Tetris())
 
 	def __createNewUnit(self):
 		self.tetrisList.append(Tetris())
@@ -39,14 +125,15 @@ class Program:
 		self.population.append(net)
 
 def Main():
-	p = Program(20)
-	p.Start()
+	p = Program()
+	# p.StartNew(20)
+	p.StartLoad(0)
 
 	# t = Tetris()
-	# ll = []
+	# # ll = []
 	# p = Display()
 	# p.Run(t)
-	# p.RunList(ll)
+	# # p.RunList(ll)
 	pass
 
 if __name__=="__main__":

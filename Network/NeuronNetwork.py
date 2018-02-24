@@ -3,8 +3,8 @@ import numpy.random as random
 import os
 import configparser
 from pprint import pprint
-from NetworkFunctions import NetworkFunctionsType
-from NetworkFunctions import NetworkFunctions
+from .NetworkFunctions import NetworkFunctionsType
+from .NetworkFunctions import NetworkFunctions
 
 CONFIG_SIZE = 'SIZE'
 CONFIG_INPUT = 'input'
@@ -57,6 +57,9 @@ class NeuronNetwork:
 									CONFIG_OUTPUT_FUNC:self.outputFunc.name}
 		config[CONFIG_WEIGHTS] = {CONFIG_V:self.weightV,
 								  CONFIG_W:self.weightW}
+
+		if not os.path.exists(directory):
+			os.makedirs(directory)
 		with open(directory+"\\"+name, 'w') as configfile:
 			config.write(configfile)
 

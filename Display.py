@@ -6,7 +6,7 @@ class Display:
 
 	def __init__(self):
 		pygame.init()
-		self.screenWidth = 1200
+		self.screenWidth = 1400
 		self.screenHeight = 800
 		self.screen = pygame.display.set_mode((self.screenWidth, self.screenHeight))
 		self.clock = pygame.time.Clock()
@@ -105,7 +105,7 @@ class Display:
 			for i in range(self.gridColumns):
 				x = self.gridTileWidth * i
 				index = i+(j*self.gridColumns)
-				if index >= len(self.tetrisList)-1:
+				if index >= len(self.tetrisList):
 					break
 				self.__printBoardOnScreen(self.tetrisList[index],(x+10,y+10), 3)
 

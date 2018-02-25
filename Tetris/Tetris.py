@@ -11,14 +11,17 @@ class Tetris:
 	BOARD_HEIGHT = 21
 
 	def __init__(self):
-		self.Restart()
 		self.isGameOver = False
 		self.onGameOver = None
+		self.__brickLimit = 0
+		self.__brickCounter = 0
+		self.Restart()
 
 	def Restart(self):
 		self.brick = {}
 		self.__initBoard()
 		self.score = 0
+		self.__brickCounter = 0
 		self.isGameOver = False
 
 	def __initBoard(self):
@@ -38,9 +41,12 @@ class Tetris:
 			board.append(item)
 		return board
 
+	def SetBrickLimit(self, limit):
+		self.__brickLimit = limit
+
 	def __numberToBinary(self,number):
 		condition = []
-		for i in range(len(BRICKS)):
+		for i in range(7):
 			if i == number:
 				condition.append(1.0)
 			else:
@@ -188,6 +194,11 @@ class Tetris:
 		return True
 
 	def __getNextBrick(self):
+		if self.__brickLimit != 0:
+			if self.__brickCounter > self.__brickLimit:
+				self.score += 1000
+				self.__gameOver()
+		self.__brickCounter+=1
 		self.brick['x'] = 4
 		self.brick['y'] = 0
 		brickNum = random.randint(0, len(BRICKS) - 1)

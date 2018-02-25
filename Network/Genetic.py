@@ -41,7 +41,6 @@ class Genetic:
 	def __mutateValue(self,value):
 		et = np.random.rand() - 0.5
 		et = et * 2
-		et = value * et
 		return -(value+et)
 
 	def SelectNewPopulation(self,oldPopulation):

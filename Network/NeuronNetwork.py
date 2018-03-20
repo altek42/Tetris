@@ -110,8 +110,11 @@ class NeuronNetwork:
 				delta = outputData[i] - y
 				derivative = NetworkFunctions.DerivativeFunction(fi,self.hiddenFunc)
 				correction = (eta* delta* self.weightW[:][1:] * np.transpose([derivative]) * x).T
+				# momentum = np.multiply(self.weightV,alpha)
+				# correction = np.add(correction,momentum)
 				self.weightV = np.add(self.weightV,correction)
 				correction = np.array([eta*delta* np.insert(fi,0,1)]).T
+				# correction += np.multiply(self.weightW,alpha)
 				self.weightW = np.add(self.weightW, correction)
 
 	def __strToArray(self,strArr):

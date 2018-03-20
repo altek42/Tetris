@@ -86,6 +86,10 @@ class Display:
 				self.tetris.MoveBrickDown()
 			elif event.key == pygame.K_SPACE:
 				self.tetris.ConfirmMove()
+			elif event.key == pygame.K_p:
+				self.tetris.ConfirmMove(isSimulation = True)
+			elif event.key == pygame.K_o:
+				self.tetris.ResetBrickPosition()
 		if event.key == pygame.K_ESCAPE:
 			self.isLoop = False
 

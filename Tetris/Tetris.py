@@ -41,6 +41,15 @@ class Tetris:
 			board.append(item)
 		return board
 
+	def GetBoard(self):
+		b = copy.deepcopy(self.board)
+		b = self.__connectBoardWithBrick(b,self.brick)
+		del b[0]
+		return b;
+
+
+
+
 	def SetBrickLimit(self, limit):
 		self.__brickLimit = limit
 
@@ -116,18 +125,26 @@ class Tetris:
 		if not self.__checkBrickPositionIsValid():
 			self.brick['rot'] = rot
 
-	def MoveBrickDown(self):
+	def MoveBrickDown(self,confirm = True):
 		(l,x,y) = np.shape(self.brick['shape'])
 		self.brick['y']+=1
-		self.score+=1
+		if confirm:
+			self.score+=1
 		if not self.__checkBrickPositionIsValid():
-			self.__newTurn()
+			self.brick['y']-=1
+			if confirm:
+				self.__newTurn()
 			return False
 		return True
 
-	def ConfirmMove(self):
-		while self.MoveBrickDown():
+	def ConfirmMove(self,isSimulation = False):
+		while self.MoveBrickDown(not isSimulation):
 			pass
+
+	def ResetBrickPosition(self):
+		self.brick['x'] = 4
+		self.brick['y'] = 0
+		self.brick['rot'] = 0
 
 	def MoveBrickLeft(self):
 		self.brick['x']-=1
@@ -140,7 +157,6 @@ class Tetris:
 			self.brick['x']-=1
 
 	def __newTurn(self):
-		self.brick['y']-=1
 		self.__connectBoardWithBrick(self.board,self.brick)
 		self.__getNextBrick()
 		self.__checkFullLines()

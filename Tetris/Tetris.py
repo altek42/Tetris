@@ -47,9 +47,6 @@ class Tetris:
 		del b[0]
 		return b;
 
-
-
-
 	def SetBrickLimit(self, limit):
 		self.__brickLimit = limit
 
@@ -105,6 +102,10 @@ class Tetris:
 
 	def GetBrickPosition(self):
 		return (self.brick['x'],self.brick['y'])
+
+	def GetBrickRotateCount(self):
+		(l,x,y) = np.shape(self.brick['shape'])
+		return l;
 
 	def RotateBrickRight(self):
 		(l,x,y) = np.shape(self.brick['shape'])

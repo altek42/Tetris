@@ -45,7 +45,7 @@ class Tetris:
 		b = copy.deepcopy(self.board)
 		b = self.__connectBoardWithBrick(b,self.brick)
 		del b[0]
-		return b;
+		return b,self.brick['shapeNum'];
 
 	def SetBrickLimit(self, limit):
 		self.__brickLimit = limit

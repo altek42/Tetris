@@ -2,10 +2,14 @@ from Display import *
 from Tetris.Tetris import *
 import threading
 import time
+from Network.NeuronNetwork import *
+from Network.NetworkFunctions import *
+import pprint
+import numpy as np
 
 class Program:
 	BRICK_LIMIT = 50000
-	GAMES_LIMIT = 1
+	GAMES_LIMIT = 10000
 
 	def __init__(self):
 		self.display = Display()
@@ -13,6 +17,9 @@ class Program:
 
 	def StartNew(self):
 		self.tetris = Tetris()
+		self.net = NeuronNetwork()
+		self.net.New(18,30,1)
+		self.net.Init();
 		self.__start()
 
 	def ____debug(self):
@@ -24,43 +31,68 @@ class Program:
 		t = threading.Thread(target=self.__netLoop)
 		t.daemon = True
 		t.start()
-		t = threading.Thread(target=self.display.Run,args=(self.tetris,))
-		t.daemon = True
-		t.start()
-
-		self.____debug()
+		# t = threading.Thread(target=self.display.Run,args=(self.tetris,))
+		# t.daemon = True
+		# t.start()
+		self.display.Run(self.tetris)
+		# self.____debug()
 		t.join()
 
 
 	def __netLoop(self):
-		return
 		for i in range(self.GAMES_LIMIT):
+		# for i in range(1):
 			self.moveList = []
 			self.__netPlay()
-			# learn net
+			self.__netLearn()
+			print("GAME: ",i,"\tSCORE: ",self.tetris.score)
 			self.tetris.Restart()
+		self.display.Exit();
 
 	def __netPlay(self):
-		# while not self.tetris.isGameOver:
-			# get move
-			# move
-			# save move
-		pass
+		self.history = []
+		while not self.tetris.isGameOver:
+			(move, data)= self.__getBestMove()
+			(pos,rot) = move
+			self.__moveTetrisAt(pos,rot)
+			self.tetris.ConfirmMove()
+			self.history.append(data)
+			if len(self.history) > 99:
+				del self.history[0]
+
+	def __netLearn(self):
+		it = 0
+		inData=[]
+		reward=[]
+		for (i, o) in self.history:
+			inData.append(i)
+			it+=1
+			if(it < len(self.history)):
+				reward.append(o + 0.5 * self.history[it][1])
+		del inData[-1]
+		self.net.Train(inData,reward,200,0.2)
+
 
 	"""
 		@ret (pos,rot)
 	"""
 	def __getBestMove(self):
 		rotCount = self.tetris.GetBrickRotateCount()
-		moves = []
+		moves = {}
+		inMove = {}
 		for pos in range(-5,5):
 			for rot in range(rotCount):
 				self.__moveTetrisAt(pos,rot)
 				self.tetris.ConfirmMove(isSimulation = True)
-				print("Wait!",rot,pos)
-				time.sleep(0.6)
+				(board,brick) = self.tetris.GetBoard()
+				inData = self.__prepareInputForNet(board,brick)
+				y = self.net.Sim(inData)
+				moves[(pos,rot)] = y[0]
+				inMove[(pos,rot)] = inData
+				# print ("[",pos," ",rot,"] ",y)
 				self.tetris.ResetBrickPosition()
-
+		m = min(moves, key=moves.get)
+		return (m, (inMove[m],moves[m]))
 
 	def __moveTetrisAt(self,pos,rot):
 		for i in range(rot):
@@ -71,6 +103,41 @@ class Program:
 		elif pos < 0:
 			for i in range(-pos):
 				self.tetris.MoveBrickLeft()
+
+	def __prepareInputForNet(self,board,brick):
+		levels = [0 for x in board[0]];
+		holes = 0
+		lineIt =21
+		for line in board:
+			lineIt -= 1
+			cellIt=-1
+			for cell in line:
+				cellIt+=1
+				if cell != 0:
+					if levels[cellIt] ==0:
+						levels[cellIt] = lineIt
+				else:
+					if levels[cellIt] > lineIt:
+						holes += 1
+		# m = max(levels)
+		levels = [x/20 for x in levels]
+		bricks = [0.0 for x in range(7)]
+		bricks[brick] = 1.0
+		if holes == 0:
+			holes = 0.0
+		elif 1 <= holes < 5:
+			holes = 0.25
+		elif 5 <= holes < 10:
+			holes = 0.5
+		elif 10 <= holes < 15:
+			holes = 0.75
+		else:
+			holes = 1.0
+
+		levels.extend(bricks)
+		levels.append(holes)
+		return levels
+		pass
 
 if __name__ == "__main__":
 	import main

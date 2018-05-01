@@ -2,7 +2,7 @@ import pygame
 import pprint
 
 class Display:
-	FPS = 5
+	FPS = 30
 
 	def __init__(self):
 		pygame.init()
@@ -27,6 +27,10 @@ class Display:
 		self.isInput = False
 		self.__setDisplayGrid()
 		self.__mainLoop()
+
+	def Exit(self):
+		self.isLoop = False;
+		pass
 
 	def __setDisplayGrid(self):
 		levels = 0
@@ -67,11 +71,7 @@ class Display:
 				self.isLoop = False
 			if event.type == pygame.KEYUP:
 				self.__keyUpEvent(event)
-		# action press
-		# if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
-        #                 is_blue = not is_blue
-		# pressed = pygame.key.get_pressed()
-		# if pressed[pygame.K_UP]: y -= 3
+
 	def __keyUpEvent(self,event):
 		if self.isInput:
 			if event.key == pygame.K_q:
@@ -161,5 +161,6 @@ class Display:
 			return (0,0,0)
 
 	def __gameOver(self,sender,args=None):
-		print("MAIN GAMEOVER")
+		# print("MAIN GAMEOVER")
 		# sender.Restart()
+		pass

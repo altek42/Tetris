@@ -6,6 +6,7 @@ from Network.NeuronNetwork import *
 from Network.NetworkFunctions import *
 import pprint
 import numpy as np
+import random
 
 class Program:
 	BRICK_LIMIT = 50000
@@ -18,7 +19,7 @@ class Program:
 	def StartNew(self):
 		self.tetris = Tetris()
 		self.net = NeuronNetwork()
-		self.net.New(18,30,1)
+		self.net.New(19,100,1)
 		self.net.Init();
 		self.__start()
 
@@ -72,10 +73,6 @@ class Program:
 		del inData[-1]
 		self.net.Train(inData,reward,200,0.2)
 
-
-	"""
-		@ret (pos,rot)
-	"""
 	def __getBestMove(self):
 		rotCount = self.tetris.GetBrickRotateCount()
 		moves = {}
@@ -91,7 +88,10 @@ class Program:
 				inMove[(pos,rot)] = inData
 				# print ("[",pos," ",rot,"] ",y)
 				self.tetris.ResetBrickPosition()
-		m = min(moves, key=moves.get)
+		if random.random() < 0.1:
+			m = random.choice(list(moves))
+		else:
+			m = min(moves, key=moves.get)
 		return (m, (inMove[m],moves[m]))
 
 	def __moveTetrisAt(self,pos,rot):
@@ -108,18 +108,23 @@ class Program:
 		levels = [0 for x in board[0]];
 		holes = 0
 		lineIt =21
+		fullLineCounter=0
 		for line in board:
 			lineIt -= 1
 			cellIt=-1
+			fulllLine = True
 			for cell in line:
 				cellIt+=1
 				if cell != 0:
 					if levels[cellIt] ==0:
 						levels[cellIt] = lineIt
 				else:
+					fulllLine = False
 					if levels[cellIt] > lineIt:
 						holes += 1
-		# m = max(levels)
+			if fulllLine:
+				fullLineCounter += 1
+
 		levels = [x/20 for x in levels]
 		bricks = [0.0 for x in range(7)]
 		bricks[brick] = 1.0
@@ -136,6 +141,7 @@ class Program:
 
 		levels.extend(bricks)
 		levels.append(holes)
+		levels.append(float(fullLineCounter)/4)
 		return levels
 		pass
 

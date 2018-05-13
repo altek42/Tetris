@@ -2,6 +2,9 @@ from .Bricks import *
 import numpy as np
 import random
 import copy
+import pprint
+import sys, traceback
+from threading import Lock
 
 class Tetris:
 	"""
@@ -9,6 +12,7 @@ class Tetris:
 	"""
 	BOARD_WIDTH = 10
 	BOARD_HEIGHT = 21
+	lock = Lock()
 
 	def __init__(self):
 		self.isGameOver = False
@@ -92,7 +96,17 @@ class Tetris:
 			x = brick['x']
 			for item in brickLine:
 				if not item == 0:
-					board[y][x]=item
+					if y>20 or x>=10:
+						break
+					try:
+						board[y][x]=item
+					except IndexError as e:
+						Tetris.lock.acquire()
+						pprint.pprint(board)
+						print("Y: ",y," X: ",x)
+						traceback.print_exc(file=sys.stdout)
+						Tetris.lock.release()
+						raise e
 				x+=1
 			y+=1
 		return board
@@ -104,11 +118,12 @@ class Tetris:
 		return (self.brick['x'],self.brick['y'])
 
 	def GetBrickRotateCount(self):
-		(l,x,y) = np.shape(self.brick['shape'])
+		l = len(self.brick['shape'])
 		return l;
 
 	def RotateBrickRight(self):
-		(l,x,y) = np.shape(self.brick['shape'])
+		#(l,x,y) = np.shape(self.brick['shape'])
+		l = len(self.brick['shape'])
 		rot = self.brick['rot']
 		self.brick['rot']-=1
 		if self.brick['rot'] < 0:
@@ -118,7 +133,8 @@ class Tetris:
 			self.brick['rot'] = rot
 
 	def RotateBrickLeft(self):
-		(l,x,y) = np.shape(self.brick['shape'])
+		#(l,x,y) = np.shape(self.brick['shape'])
+		l = len(self.brick['shape'])
 		rot = self.brick['rot']
 		self.brick['rot']+=1
 		if self.brick['rot'] >= l:
@@ -127,7 +143,7 @@ class Tetris:
 			self.brick['rot'] = rot
 
 	def MoveBrickDown(self,confirm = True):
-		(l,x,y) = np.shape(self.brick['shape'])
+		#(l,x,y) = np.shape(self.brick['shape'])
 		self.brick['y']+=1
 		if confirm:
 			self.score+=1
@@ -156,6 +172,7 @@ class Tetris:
 		self.brick['x']+=1
 		if not self.__checkBrickPositionIsValid():
 			self.brick['x']-=1
+
 
 	def __newTurn(self):
 		self.__connectBoardWithBrick(self.board,self.brick)
@@ -191,7 +208,7 @@ class Tetris:
 	def __checkBrickPositionIsValid(self):
 		brick = self.brick
 		board = self.board
-		(lShape,xShape,yShape) = np.shape(brick['shape'])
+		#(lShape,xShape,yShape) = np.shape(brick['shape'])
 		y = brick['y']
 		rot = brick['rot']
 		for brickLine in self.brick['shape'][rot]:

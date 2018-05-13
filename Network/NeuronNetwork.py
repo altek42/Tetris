@@ -5,6 +5,8 @@ import configparser
 from pprint import pprint
 from .NetworkFunctions import NetworkFunctionsType
 from .NetworkFunctions import NetworkFunctions
+np.set_printoptions(threshold=np.nan)
+
 
 CONFIG_SIZE = 'SIZE'
 CONFIG_INPUT = 'input'
@@ -37,7 +39,7 @@ class NeuronNetwork:
 		self.hiddenCount = hiddenSize
 		self.outputCount = outputSize
 
-	def Init(self,hiddenFunc=NetworkFunctionsType.SIGMOIDAL,outputFunc=NetworkFunctionsType.LINEAR):
+	def Init(self,hiddenFunc=NetworkFunctionsType.SIGMOIDAL,outputFunc=NetworkFunctionsType.SIGMOIDAL):
 		self.hiddenFunc = hiddenFunc
 		self.outputFunc = outputFunc
 		self.weightV = (random.rand(self.inputsCount+1,self.hiddenCount)*2)-1

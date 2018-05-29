@@ -2,7 +2,7 @@ import pygame
 import pprint
 
 class Display:
-	FPS = 3
+	FPS = 15
 
 	def __init__(self):
 		pygame.init()
@@ -111,7 +111,7 @@ class Display:
 				index = i+(j*self.gridColumns)
 				if index >= len(self.tetrisList):
 					break
-				self.__printBoardOnScreen(self.tetrisList[index],(x+10,y+10), 3)
+				self.__printBoardOnScreen(self.tetrisList[index],(x+10,y+10), 1)
 
 
 	def __printSingleGame(self):
@@ -142,7 +142,7 @@ class Display:
 
 	def __numberToColor(self,number):
 		if number == 0:
-			return (44,44,44)
+			return (66,66,66)
 		elif number == 1:
 			return (211,32,17)
 		elif number == 2:

@@ -90,8 +90,8 @@ class NeuronNetwork:
 		return y
 
 	def __sim(self,value):
-		if len(value) != self.inputsCount:
-			print("Wrong input size. Expected",self.inputsCount,"where",len(value),"was given.")
+		#if len(value) != self.inputsCount:
+		#	print("Wrong input size. Expected",self.inputsCount,"where",len(value),"was given.")
 		x = [value]
 		x = np.insert(x, 0, 1)
 		s = np.matmul(x,self.weightV)

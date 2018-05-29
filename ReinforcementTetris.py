@@ -10,17 +10,27 @@ import random
 
 class Program:
 	BRICK_LIMIT = 50000
-	GAMES_LIMIT = 10000
+	GAMES_LIMIT = 100000
 
 	def __init__(self):
 		self.display = Display()
 		pass
 
-	def StartNew(self):
+	def StartNew(self, name="RLT_0"):
 		self.tetris = Tetris()
+		self.name = name
+		self.tetris.SetBrickLimit(Program.BRICK_LIMIT)
 		self.net = NeuronNetwork()
-		self.net.New(19,100,1)
+		self.net.New(12,200,1)
 		self.net.Init();
+		self.__start()
+
+	def StartLoad(self, name="RLT_0"):
+		self.tetris = Tetris()
+		self.name = name
+		self.tetris.SetBrickLimit(Program.BRICK_LIMIT)
+		self.net = NeuronNetwork()
+		self.net.Load(directory="Reinforcement",name=self.name)
 		self.__start()
 
 	def ____debug(self):
@@ -46,7 +56,10 @@ class Program:
 			self.moveList = []
 			self.__netPlay()
 			self.__netLearn()
-			print("GAME: ",i,"\tSCORE: ",self.tetris.score)
+			print("GAME: ",i,
+				"\tSCORE: ",self.tetris.score,
+				"\tBRICKS: ",self.tetris.GetArrangedBrickCount())
+			self.net.Save(directory="Reinforcement",name=self.name)
 			self.tetris.Restart()
 		self.display.Exit();
 
@@ -58,20 +71,30 @@ class Program:
 			self.__moveTetrisAt(pos,rot)
 			self.tetris.ConfirmMove()
 			self.history.append(data)
-			if len(self.history) > 99:
+			if len(self.history) > 19:
 				del self.history[0]
 
+	# def __netLearn(self):
+	# 	it = 0
+	# 	inData=[]
+	# 	reward=[]
+	# 	for (i, o) in self.history:
+	# 		inData.append(i)
+	# 		it+=1
+	# 		if(it < len(self.history)):
+	# 			reward.append(o + 0.5 * self.history[it][1])
+	# 	del inData[-1]
+	# 	self.net.Train(inData,reward,200,0.2)
 	def __netLearn(self):
-		it = 0
 		inData=[]
 		reward=[]
+		g=1.0
+		self.history.reverse()
 		for (i, o) in self.history:
 			inData.append(i)
-			it+=1
-			if(it < len(self.history)):
-				reward.append(o + 0.5 * self.history[it][1])
-		del inData[-1]
-		self.net.Train(inData,reward,200,0.2)
+			reward.append(g)
+			g=g-0.05
+		self.net.Train(inData,reward,1,0.5)
 
 	def __getBestMove(self):
 		rotCount = self.tetris.GetBrickRotateCount()
@@ -126,8 +149,8 @@ class Program:
 				fullLineCounter += 1
 
 		levels = [x/20 for x in levels]
-		bricks = [0.0 for x in range(7)]
-		bricks[brick] = 1.0
+		#bricks = [0.0 for x in range(7)]
+		#bricks[brick] = 1.0
 		if holes == 0:
 			holes = 0.0
 		elif 1 <= holes < 5:
@@ -139,7 +162,7 @@ class Program:
 		else:
 			holes = 1.0
 
-		levels.extend(bricks)
+		#levels.extend(bricks)
 		levels.append(holes)
 		levels.append(float(fullLineCounter)/4)
 		return levels

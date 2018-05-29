@@ -54,6 +54,9 @@ class Tetris:
 	def SetBrickLimit(self, limit):
 		self.__brickLimit = limit
 
+	def GetArrangedBrickCount(self):
+		return self.__brickCounter
+
 	def __numberToBinary(self,number):
 		condition = []
 		for i in range(7):

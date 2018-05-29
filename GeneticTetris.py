@@ -116,8 +116,8 @@ class Program:
 				fullLineCounter += 1
 
 		levels = [x/20 for x in levels]
-		bricks = [0.0 for x in range(7)]
-		bricks[brick] = 1.0
+		#bricks = [0.0 for x in range(7)]
+		#bricks[brick] = 1.0
 		if holes == 0:
 			holes = 0.0
 		elif 1 <= holes < 5:
@@ -129,7 +129,7 @@ class Program:
 		else:
 			holes = 1.0
 
-		levels.extend(bricks)
+		# levels.extend(bricks)
 		levels.append(holes)
 		levels.append(float(fullLineCounter)/4)
 		return levels
@@ -181,6 +181,6 @@ class Program:
 		t.SetBrickLimit(self.BRICK_LIMIT)
 		self.tetrisList.append(t)
 		net = NeuronNetwork()
-		net.New(19,100,1)
+		net.New(12,100,1)
 		net.Init()
 		self.population.append(net)

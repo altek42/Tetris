@@ -10,8 +10,9 @@ class Tetris:
 	"""
 		board[y][x]
 	"""
-	BOARD_WIDTH = 10
+	BOARD_WIDTH = 8
 	BOARD_HEIGHT = 21
+	BOARD_X_MIDDLE = 3
 	lock = Lock()
 
 	def __init__(self):
@@ -23,6 +24,7 @@ class Tetris:
 
 	def Restart(self):
 		self.brick = {}
+		self.nextBrick = {}
 		self.__initBoard()
 		self.score = 0
 		self.__brickCounter = 0
@@ -30,6 +32,7 @@ class Tetris:
 
 	def __initBoard(self):
 		self.board = [[0 for x in range(self.BOARD_WIDTH)] for y in range(self.BOARD_HEIGHT)]
+		self.__getNextBrick()
 		self.__getNextBrick()
 
 	def GetBoardToPrint(self):
@@ -50,6 +53,11 @@ class Tetris:
 		b = self.__connectBoardWithBrick(b,self.brick)
 		del b[0]
 		return b,self.brick['shapeNum'];
+
+	def GetBoardOnly(self):
+		b = copy.deepcopy(self.board)
+		del b[0]
+		return b
 
 	def SetBrickLimit(self, limit):
 		self.__brickLimit = limit
@@ -99,7 +107,7 @@ class Tetris:
 			x = brick['x']
 			for item in brickLine:
 				if not item == 0:
-					if y>20 or x>=10:
+					if y>20 or x>= self.BOARD_WIDTH:
 						break
 					try:
 						board[y][x]=item
@@ -162,9 +170,27 @@ class Tetris:
 			pass
 
 	def ResetBrickPosition(self):
-		self.brick['x'] = 4
+		self.brick['x'] = self.BOARD_X_MIDDLE
 		self.brick['y'] = 0
 		self.brick['rot'] = 0
+
+	def SaveState(self):
+		self.copy = {}
+		self.copy['brick']= copy.deepcopy(self.brick)
+		self.copy['nextBrick']= copy.deepcopy(self.nextBrick)
+		self.copy['score']= copy.deepcopy(self.score)
+		self.copy['brickCounter']= copy.deepcopy(self.__brickCounter)
+		self.copy['board'] = copy.deepcopy(self.board)
+		pass
+
+	def LoadState(self):
+		self.brick = self.copy['brick']
+		self.nextBrick = self.copy['nextBrick']
+		self.score = self.copy['score']
+		self.__brickCounter = self.copy['brickCounter']
+		self.board = self.copy['board']
+		self.copy = {}
+		pass
 
 	def MoveBrickLeft(self):
 		self.brick['x']-=1
@@ -206,7 +232,7 @@ class Tetris:
 		elif lines == 3:
 			self.score+=150
 		elif lines == 4:
-			self.score+=600
+			self.score+=400
 
 	def __checkBrickPositionIsValid(self):
 		brick = self.brick
@@ -231,17 +257,49 @@ class Tetris:
 		return True
 
 	def __getNextBrick(self):
+		self.brick = copy.deepcopy(self.nextBrick)
 		if self.__brickLimit != 0:
 			if self.__brickCounter > self.__brickLimit:
 				self.score += 1000
 				self.__gameOver()
 		self.__brickCounter+=1
-		self.brick['x'] = 4
-		self.brick['y'] = 0
+		self.nextBrick['x'] = self.BOARD_X_MIDDLE
+		self.nextBrick['y'] = 0
 		brickNum = random.randint(0, len(BRICKS) - 1)
-		self.brick['shape'] = BRICKS[brickNum]
-		self.brick['shapeNum'] = brickNum
-		self.brick['rot'] = 0
+		self.nextBrick['shape'] = BRICKS[brickNum]
+		self.nextBrick['shapeNum'] = brickNum
+		self.nextBrick['rot'] = 0
+
+	def MoveBrickAt(self,x,rot):
+		for r in range(rot):
+			self.RotateBrickRight()
+		for m in range(abs(x)):
+			if(x>0):
+				self.MoveBrickRight()
+			if(x<0):
+				self.MoveBrickLeft()
+
+	def GetAllActions(self):
+		self.SaveState()
+		xSide = self.BOARD_WIDTH + 1
+		xSide = xSide // 2
+		actions = []
+		brickIt = 0
+		for brick in BRICKS:
+			self.brick['x'] = self.BOARD_X_MIDDLE
+			self.brick['y'] = 0
+			self.brick['shape'] = brick
+			self.brick['shapeNum'] = brickIt
+			self.brick['rot'] = 0
+
+			for pos in range(-xSide,xSide):
+				for rot in range(len(brick)):
+					self.MoveBrickAt(pos,rot)
+					actions.append((self.brick['x']-self.BOARD_X_MIDDLE,self.brick['rot']))
+					self.ResetBrickPosition()
+			brickIt+=1
+		actions = list(set(actions))
+		return actions
 
 	def __gameOver(self):
 		self.isGameOver=True

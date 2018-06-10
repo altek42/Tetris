@@ -90,6 +90,11 @@ class Display:
 				self.tetris.ConfirmMove(isSimulation = True)
 			elif event.key == pygame.K_o:
 				self.tetris.ResetBrickPosition()
+			elif event.key == pygame.K_m:
+				self.tetris.SaveState()
+			elif event.key == pygame.K_n:
+				self.tetris.LoadState()
+
 		if event.key == pygame.K_ESCAPE:
 			self.isLoop = False
 

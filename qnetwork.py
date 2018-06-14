@@ -1,6 +1,7 @@
 from Network.NeuronNetwork import *
 from Network.NetworkFunctions import *
 from Tetris.Tetris import *
+from Tetris.Bricks import QBRICKS
 from Display import *
 import threading
 import pprint
@@ -15,31 +16,56 @@ class Program(object):
 		super(Program, self).__init__()
 		self.display = Display()
 		self.display.InputEnable(False)
-
+		self.settingsFile = "Settings"
+		self.bricks = QBRICKS
 
 	def StartNew(self, name="QNet_0"):
-		self.name = name
-		self.tetris = Tetris()
-		self.tetris.SetBrickLimit(Program.BRICK_LIMIT)
-		self.net = NeuronNetwork()
-		self.net.New(36,100,1)
-		self.net.Init();
-		self.__start()
+		self.__prepare(name)
+		self.net.New(36,400,1)
+		self.net.Init()
+		# self.__saveSettings()
+		self.__start(self.__mainLoopTrainig)
 
 	def StartLoad(self, name="QNet_0"):
+		# self.__loadSettings(name)
+		self.__prepare(name)
+		self.net.Load(directory="Reinforcement",name=self.name)
+		self.__start(self.__mainLoopTrainig)
+
+	def Play(self, name="QNet_0"):
+		self.__prepare(name)
+		self.net.Load(directory="Reinforcement",name=self.name)
+		self.__start(self.__netPlay)
+
+
+	def __prepare(self, name="QNet_0"):
 		self.name = name
-		self.tetris = Tetris()
+		self.tetris = Tetris(self.bricks)
 		self.tetris.SetBrickLimit(Program.BRICK_LIMIT)
 		self.net = NeuronNetwork()
-		self.net.Load(directory="Reinforcement",name=self.name)
-		self.__start()
+
+	# def __saveSettings(self):
+	# 	config = configparser.ConfigParser()
+	# 	config[self.name] = {
+	# 		'bricks': self.bricks
+	# 	}
+	# 	with open(self.settingsFile, 'w') as configfile:
+	# 		config.write(configfile)
+	#
+	# def __loadSettings(self, name):
+	# 	config = configparser.SafeConfigParser()
+	# 	config.read(self.settingsFile)
+	# 	settings = config[name]
+	# 	self.bricks = []
+	# 	settings['bricks']
+	# 	print(type(self.bricks))
+	# 	print(self.bricks)
 
 
-
-	def __start(self):
+	def __start(self, func):
 		self.__actions = self.tetris.GetAllActions()
 		self.__createActionNet(self.__actions)
-		t = threading.Thread(target=self.__mainLoopTrainig)
+		t = threading.Thread(target=func)
 		t.daemon = True
 		t.start()
 		self.display.Run(self.tetris)
@@ -57,12 +83,10 @@ class Program(object):
 			self.net.fit = bestScore
 			self.net.Save(directory="Reinforcement",name=self.name)
 		input('Net is ready...')
-		self.tetris.Restart()
 		self.__netPlay()
 		print("BestScore:", bestScore)
 		print("BestGame:", bestGame)
 		input('Hit Enter...')
-		self.display.Exit();
 
 	def __createActionNet(self, actions):
 		lenAction = len(self.__actions)
@@ -79,14 +103,17 @@ class Program(object):
 		yLen = len(board)
 		xLen = len(board[0])
 		vec = [0 for a in range(xLen)]
+		emptyCells = 0
 		for y in range(yLen):
 			for x in range(xLen):
 				if vec[x] == 0 and board[y][x] != 0:
 					vec[x] = yLen-y
-		return [x/20 for x in vec]
+				elif vec[x] != 0 and board[y][x] == 0:
+					emptyCells += 1
+		return ([x/20 for x in vec], emptyCells)
 
 	def __getNetResponseActions(self):
-		state = self.__getState()
+		state, emptyCells = self.__getState()
 		vec = []
 		for action in self.__actionsNet:
 			s = state + action
@@ -103,37 +130,57 @@ class Program(object):
 		return vec.index(max(vec))
 
 	def __getRandomActionIndex(self):
-		state = self.__getState()
 		return random.randint(0,len(self.__actions)-1)
 
 	def __netPlay(self):
-		while not self.tetris.isGameOver:
-			action = self.__getBestActionIndex()
-			(pos,rot) = self.__actions[action]
-			self.tetris.MoveBrickAt(pos,rot)
-			self.tetris.ConfirmMove()
+		arg = input('Continue?\nq: exit\n>>')
+		while arg != 'q':
+			self.tetris.Restart()
+			while not self.tetris.isGameOver:
+				action = self.__getBestActionIndex()
+				(pos,rot) = self.__actions[action]
+				self.tetris.MoveBrickAt(pos,rot)
+				self.tetris.ConfirmMove()
+			print('Score: ',self.tetris.score)
+			print('Moves: ',self.tetris.GetArrangedBrickCount())
+			print('\n')
+			arg = input('Continue?\nq: exit\n>>')
+		self.display.Exit();
 
 
 	def __netLearn(self):
+		isFirst = True
 		while not self.tetris.isGameOver:
-			state = self.__getState()
+			state, emptyCells = self.__getState()
 			r= random.random()
-			if r<0.05:
+			if r<0.05 or isFirst:
+				isFirst = False
 				action = self.__getRandomActionIndex()
 			else:
 				action = self.__getBestActionIndex()
 
 			inputData = state + self.__actionsNet[action]
 			y = self.net.Sim(inputData)
-			# self.tetris.SaveState()
-			reward = self.tetris.score / 400
+			reward = self.tetris.score / 300
 			(pos,rot) = self.__actions[action]
 			self.tetris.MoveBrickAt(pos,rot)
 			self.tetris.ConfirmMove()
-			reward = self.tetris.score / 400 - reward
+			state, emptyCells = self.__getState()
+			highest = max(state)
+			bonus = 20 - emptyCells
+			if highest < 0.5:
+				bonus += 10
+			if bonus < 0:
+				bonus = 0
+			reward = (self.tetris.score + bonus) / 300 - reward
 			bestQ = self.__getBestQ()
-			# self.tetris.LoadState()
 			qValue = reward + self.GAMMA * bestQ
+
+			# print("reward:",reward)
+			# print("q:",qValue)
+			# print("emptyCells:",emptyCells)
+			# if reward>0.01:
+			# 	input()
 			# loss = (qValue - y)**2
 			# print(qValue)
 			self.net.Train([inputData],[qValue],1,0.2)

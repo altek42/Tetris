@@ -1,5 +1,6 @@
 from enum import Enum, unique
 import numpy as np
+from scipy.special import expit
 
 @unique
 class NetworkFunctionsType(Enum):

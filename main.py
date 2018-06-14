@@ -17,8 +17,12 @@ def Main():
 #w: 8
 #h: 21
 	p = qnetwork.Program()
-	p.StartLoad()
-	# p.StartNew()
+	# p.StartLoad(name="QNet_1")
+	p.StartNew(name="QNet_2")
+# TODO: dopisac rodzaj klocka na wejscie
+
+	# p.Play(name="QNet_2")
+	# p.Play(name="QNet_1")
 
 #w: 10
 #h: 21

@@ -15,11 +15,15 @@ class Tetris:
 	BOARD_X_MIDDLE = 3
 	lock = Lock()
 
-	def __init__(self):
+	def __init__(self, bricks= None):
 		self.isGameOver = False
 		self.onGameOver = None
 		self.__brickLimit = 0
 		self.__brickCounter = 0
+		if bricks is None:
+			self.bricks = BRICKS
+		else:
+			self.bricks = bricks
 		self.Restart()
 
 	def Restart(self):
@@ -265,8 +269,8 @@ class Tetris:
 		self.__brickCounter+=1
 		self.nextBrick['x'] = self.BOARD_X_MIDDLE
 		self.nextBrick['y'] = 0
-		brickNum = random.randint(0, len(BRICKS) - 1)
-		self.nextBrick['shape'] = BRICKS[brickNum]
+		brickNum = random.randint(0, len(self.bricks) - 1)
+		self.nextBrick['shape'] = self.bricks[brickNum]
 		self.nextBrick['shapeNum'] = brickNum
 		self.nextBrick['rot'] = 0
 
@@ -285,7 +289,7 @@ class Tetris:
 		xSide = xSide // 2
 		actions = []
 		brickIt = 0
-		for brick in BRICKS:
+		for brick in self.bricks:
 			self.brick['x'] = self.BOARD_X_MIDDLE
 			self.brick['y'] = 0
 			self.brick['shape'] = brick

@@ -1,4 +1,5 @@
 import GeneticTetris
+import Genetic2
 from Tetris.Tetris import Tetris
 from Display import Display
 import qnetwork
@@ -14,12 +15,15 @@ def Main():
 	# p = Display()
 	# p.Run(t)
 
+	p= Genetic2.Program()
+	p.StartNew(30)
+	# p.StartLoad(30,2)
+
 #w: 8
 #h: 21
-	p = qnetwork.Program()
+	# p = qnetwork.Program()
 	# p.StartLoad(name="QNet_1")
-	p.StartNew(name="QNet_2")
-# TODO: dopisac rodzaj klocka na wejscie
+	# p.StartNew(name="QNet_2")
 
 	# p.Play(name="QNet_2")
 	# p.Play(name="QNet_1")
